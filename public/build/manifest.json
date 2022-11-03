@@ -1,0 +1,56 @@
+{
+  "public/assets/hash.svg": {
+    "file": "assets/hash.5a2c038c.svg",
+    "src": "public/assets/hash.svg"
+  },
+  "public/assets/checkmark-green.svg": {
+    "file": "assets/checkmark-green.160352a9.svg",
+    "src": "public/assets/checkmark-green.svg"
+  },
+  "public/assets/18-footers-logo-wide.png": {
+    "file": "assets/18-footers-logo-wide.e03bfe89.png",
+    "src": "public/assets/18-footers-logo-wide.png"
+  },
+  "public/assets/calendar.svg": {
+    "file": "assets/calendar.236ac5dd.svg",
+    "src": "public/assets/calendar.svg"
+  },
+  "public/assets/person-icon.svg": {
+    "file": "assets/person-icon.2c8a8ed3.svg",
+    "src": "public/assets/person-icon.svg"
+  },
+  "public/assets/18-footers-logo.png": {
+    "file": "assets/18-footers-logo.403e3edd.png",
+    "src": "public/assets/18-footers-logo.png"
+  },
+  "public/assets/checkmark.svg": {
+    "file": "assets/checkmark.bd7a0047.svg",
+    "src": "public/assets/checkmark.svg"
+  },
+  "public/assets/18-footers-splash.jpg": {
+    "file": "assets/18-footers-splash.b1a413be.jpg",
+    "src": "public/assets/18-footers-splash.jpg"
+  },
+  "resources/js/app.js": {
+    "file": "assets/app.bad1ec87.js",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "css": [
+      "assets/app.0c39a1d3.css"
+    ],
+    "assets": [
+      "assets/checkmark-green.160352a9.svg",
+      "assets/18-footers-splash.b1a413be.jpg",
+      "assets/18-footers-logo.403e3edd.png",
+      "assets/checkmark.bd7a0047.svg",
+      "assets/18-footers-logo-wide.e03bfe89.png",
+      "assets/person-icon.2c8a8ed3.svg",
+      "assets/calendar.236ac5dd.svg",
+      "assets/hash.5a2c038c.svg"
+    ]
+  },
+  "resources/js/app.css": {
+    "file": "assets/app.0c39a1d3.css",
+    "src": "resources/js/app.css"
+  }
+}
