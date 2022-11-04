@@ -218,7 +218,7 @@
                         link.click();
                         document.body.removeChild(link);
                      })
-                     .catch((error) => alert("export error: " + error));
+                    //  .catch((error) => alert("export error: " + error));
             }
         },
         watch: {

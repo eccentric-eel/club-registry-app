@@ -9,6 +9,22 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class RecordsController extends Controller
 {
+    private $headersArray;
+
+    public function __construct()
+    {
+        $this->headersArray = array(
+            "First Name"    => "firstname",
+            "Surname"       => "surname",
+            "Address"       => "address",
+            "Guest Type"    => "guest_type",
+            "Member Name"   => "accompanying_member_name",
+            "Member Number" => "accompanying_member_number",
+            "Check In Time" => "created_at",
+            "Ticket Number" => "id",
+        );
+    }
+
     //use vue router to display records page
     public function index()
     {        
@@ -18,28 +34,60 @@ class RecordsController extends Controller
     //return all records from DB
     public function queryRecords(Request $request)
     {
-        switch ($request->category) {
-            case 'id':
-                $category = 'id';
-                break;
-            case 'surname':
-                $category = 'surname';
-                break;
-            case 'date':
-                $category = 'created_at';
-                break;
-        }
+        $category = $this->getCategory($request->category);
 
         return Record::where($category, 'LIKE', '%' . $request->queryString . '%')->paginate(100);
     }
     
     //return all records that match the query filters 
     public function exportRecords(Request $request) {
+
+        $category = $this->getCategory($request->category);
+        $headerKeys = array_keys($this->headersArray);
+        $rowNumber = 1;
+
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray($headerKeys, null, "A{$rowNumber}"); //print next row to excel file
 
-        $records = $this->queryRecords($request);
+        $rowNumber++;
+
+        $records = Record::where($category, 'LIKE', '%' . $request->queryString . '%')->get()->toArray();
         
+        foreach($records as $record) {
+            $dataRow = [];
+
+            foreach ($this->headersArray as $column) {
+                $tmpValue = isset($record[$column]) ? $record[$column] : ' '; //if an attribute doesn't exist, use empty space ' '
+                $dataRow += [$column => $tmpValue];
+            }
+
+            $sheet->fromArray($dataRow, null, "A{$rowNumber}"); //print next row to excel file
+            $rowNumber++;
+        }
+        
+        //------------------------formatting--------------------------------------------
+        $highestColumn = $sheet->getHighestColumn();
+        $highestRow = $sheet->getHighestRow();
+        $rowNumber = 1; //reset previously used counter
+
+        foreach (range('A', $highestColumn) as $col) { //set cell width to auto based on content
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        } 
+
+        while ($rowNumber <= $highestRow) { //every other column has a light grey background
+            if (($rowNumber % 2 != 0) && ($rowNumber != 1)) {
+                $sheet->getStyle("A{$rowNumber}:{$highestColumn}{$rowNumber}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('efefef');
+            }
+
+            $rowNumber++;
+        }
+
+        //header row styling
+        $sheet->getStyle('1:1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('1:1')->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE);
+        $sheet->getStyle('1:1')->getFont()->setBold(true);
+        $sheet->getStyle("A1:{$highestColumn}1")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('404040');
 
         return response()->streamDownload(function () use ($spreadsheet) {
             $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
@@ -51,12 +99,12 @@ class RecordsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'fname' => 'required',
-            'sname' => 'required',
-            'address' => 'required',
-            'guestType' => 'required|integer|between:1,2',
+            'fname'      => 'required',
+            'sname'      => 'required',
+            'address'    => 'required',
+            'guestType'  => 'required|integer|between:1,2',
             'accompName' => 'required_if:guestType,==,2',
-            'accompNum' => 'required_if:guestType,==,2',
+            'accompNum'  => 'required_if:guestType,==,2',
         ]);
 
         $record = new Record;
@@ -75,5 +123,14 @@ class RecordsController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    protected function getCategory($query)
+    {
+        switch ($query) {
+            case 'id'     : return 'id';
+            case 'surname': return 'surname';
+            case 'date'   : return 'created_at';
+        }
     }
 }
