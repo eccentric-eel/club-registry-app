@@ -13,13 +13,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/',      function() { return view('index'); });
-Route::get('/admin', function() { return view('index'); });
-Route::get('/admin/records', 'App\Http\Controllers\RecordsController@index');
-Route::post('/admin/records/query-records', 'App\Http\Controllers\RecordsController@queryRecords');
-Route::post('/admin/records/export-records', 'App\Http\Controllers\RecordsController@exportRecords');
+Route::get('/',              'App\Http\Controllers\RecordsController@index');
+Route::get('/admin',         'App\Http\Controllers\RecordsController@index');
+Route::get('/admin/records', 'App\Http\Controllers\RecordsController@records');
 
 Route::get('/{any}',       function() { return redirect('/'); });
 Route::get('/admin/{any}', function() { return redirect('/'); });
-
-Route::post('/upload-form', 'App\Http\Controllers\RecordsController@store');

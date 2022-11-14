@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Record;
+use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Models\Record;
 
 class RecordsController extends Controller
 {
@@ -25,10 +26,35 @@ class RecordsController extends Controller
         );
     }
 
-    //use vue router to display records page
+    public function authenticate(Request $request)
+    {
+        $credentials = $request->validate([
+            'username' => ['required'],
+            'password' => ['required'],
+        ]);
+ 
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
+            return response(null,204);
+        }
+    }
+
+    public function logout(Request $request) {
+        Auth::logout();
+    }
+
     public function index()
-    {        
+    {      
         return view('index');
+    }
+    public function records()
+    {
+        if (Auth::check()) {
+            return view('index');
+        }  
+
+        return redirect('/admin');
     }
 
     //return all records from DB

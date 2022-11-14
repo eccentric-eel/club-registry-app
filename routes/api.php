@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::post('/login',  'App\Http\Controllers\RecordsController@authenticate');
+Route::post('/logout', 'App\Http\Controllers\RecordsController@logout');
+
+Route::middleware('auth:sanctum')->post('/upload-form',    'App\Http\Controllers\RecordsController@store');
+Route::middleware('auth:sanctum')->post('/query-records',  'App\Http\Controllers\RecordsController@queryRecords');
+Route::middleware('auth:sanctum')->post('/export-records', 'App\Http\Controllers\RecordsController@exportRecords');

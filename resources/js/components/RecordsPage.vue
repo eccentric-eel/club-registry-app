@@ -37,6 +37,7 @@
     </div>
 
     <div id="queryContain">
+        <button @click="logout()">logout</button>
         <div :class="{ 'active': searchByParams.Surname }" @click="changeSearchParam('Surname')">Surname</div>
         <div :class="{ 'active': searchByParams.Date }"    @click="changeSearchParam('Date')">Date</div>
         <div :class="{ 'active': searchByParams.ID }"      @click="changeSearchParam('ID')">Ticket ID</div>
@@ -117,7 +118,7 @@
                 links:   [],
             }
         },
-        created() { this.updatePage('./records/query-records') },
+        created() { this.updatePage('/api/query-records') },
         computed: {
             processedLinks() {
                 let navLinks = [];
@@ -153,9 +154,9 @@
                 this.isActiveErrorMsg = false;
 
                 if(this.validateRecord()) {
-                    axios.post('/upload-form', this.newRecord)
+                    axios.post('/api/upload-form', this.newRecord)
                          .then((response) => {
-                            this.updatePage('./records/query-records');
+                            this.updatePage('/api/query-records');
                             this.hideModal();
                          })
                          .catch((error) => alert("upload error: " + error));
@@ -205,8 +206,13 @@
                 this.newRecord.guestType = 1;
                 this.isActiveErrorMsg = false;
             },
+            logout() {
+                axios.post('/api/logout').then((reponse) => {
+                    this.$router.push('/admin');
+                })   
+            },
             exportData() {
-                axios.post('./records/export-records', { queryString: this.inputText, category: this.searchCategory }, { responseType: 'blob' })
+                axios.post('/api/export-records', { queryString: this.inputText, category: this.searchCategory }, { responseType: 'blob' })
                      .then((response) => {
                         let link = document.createElement('a');
                         
@@ -222,7 +228,7 @@
             }
         },
         watch: {
-            inputText(val) { this.updatePage('./records/query-records') }
+            inputText(val) { this.updatePage('/api/query-records') }
         },
     }
 </script>
