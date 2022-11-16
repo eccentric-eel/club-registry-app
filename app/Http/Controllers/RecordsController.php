@@ -33,11 +33,13 @@ class RecordsController extends Controller
             'password' => ['required'],
         ]);
  
-        if (Auth::attempt($credentials)) {
+        if(Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return response(null,204);
+            return response(null, 204);
         }
+
+        return response(null, 401);
     }
 
     public function logout(Request $request) {

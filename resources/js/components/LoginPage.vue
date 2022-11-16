@@ -2,6 +2,9 @@
     <div id="pageContainer">
         <div id="pageInner">
             <h3>Administrator login</h3>
+            
+            <div v-if="showError">{{errorText}}</div>
+
             <input type="text" v-model="username" />
             <input type="password" v-model="password" />
             <button @click="submitLogin()">Login</button>
@@ -17,21 +20,33 @@
             return {
                 username: '',
                 password: '',
+
+                showError: false,
+                errorText: '',
             }
         },
         methods: { 
             submitLogin() {
+                if(this.username.length && this.password.length) {
 
-                axios.get('/sanctum/csrf-cookie').then(response => {
-                    axios.post('/api/login', { username: this.username, password: this.password })
-                     .then((response) => {
-                        if(response.status === 204)
-                            this.$router.push('admin/records');
-                        else
-                            console.log(response);
-                     })
-                     .catch((error) => console.log("error: " + error));
-                });
+                    this.showError = false;
+
+                    axios.get('/sanctum/csrf-cookie').then(response => {
+                        axios.post('/api/login', { username: this.username, password: this.password })
+                        .then((response) => this.$router.push('admin/records'))
+                        .catch((error) =>  {
+                            if(error.response.status === 401) {
+                                this.showError = true;
+                                this.errorText = "invalid login";
+                            }
+                        });
+                    }); 
+                }
+                else {
+                    this.showError = true;
+                    this.errorText = 'fields required';
+                }
+
             }
         },
     }
