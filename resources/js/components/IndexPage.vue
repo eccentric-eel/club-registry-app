@@ -1,58 +1,58 @@
 <template>
     <div id="pageContainer">
         <section id="formContainer" v-if="!checkInConfirmed">
-            <form id="guestRegisterForm" @submit.prevent="sendForm()">
+            <div id="logoInfo">
+                <p>Australian 18 Footers League Ltd</p>
+                <p>ABN 46 001 071 558</p>
+                <p>
+                    77 Bay Street, Double Bay 2028<br>
+                    PH: 9363 2995<br>
+                    www.18footers.com.au
+                </p>
+            </div>
 
-                <div id="logoInfo">
-                    <p>Australian 18 Footers League Ltd</p>
-                    <p>ABN 46 001 071 558</p>
-                    <p>
-                        77 Bay Street, Double Bay 2028<br>
-                        PH: 9363 2995<br>
-                        www.18footers.com.au
-                    </p>
-                </div>
+            <h1>Temporary member & guest member sign in</h1>
 
-                <h1>Temporary member & guest member sign in</h1>
+            <div class="inputContain">
+                <input type="text" placeholder="First Name" class="invalid" v-model="guestTicket.fname" maxlength="20">
+                <input type="text" placeholder="Surname"    class="invalid" v-model="guestTicket.sname" maxlength="20">
+            </div>
+
+            <input type="text" placeholder="Full Address" class="invalid" v-model="guestTicket.address">
+
+            <h3>Please select an appropriate category below</h3>
+
+            <div class="guestCategory" :class="{ 'active': (guestTicket.guestType === 1) }" @click="guestTicket.guestType = 1">
+                <div class="checkbox" :class="{ 'active': (guestTicket.guestType === 1) }"></div>
+                <h4>Temporary Member</h4>
+                <p>I declare that i reside outside a 5km radius of this club.</p>
+            </div>
+            <div class="guestCategory" :class="{ 'active': (guestTicket.guestType === 2) }" @click="guestTicket.guestType = 2">
+                <div class="checkbox" :class="{ 'active': (guestTicket.guestType === 2) }"></div>
+                <h4>Guest of a Member</h4>
+                <p>I declare that i will remain in the reasonable company of the member at all times and will not remain on club premises longer than that of the member.</p>
+            
+                <h5>Accompanying Member Details</h5>
 
                 <div class="inputContain">
-                    <input type="text" placeholder="First Name" name="fname" maxlength="20" required>
-                    <input type="text" placeholder="Surname" name="sname" maxlength="20" required>
+                    <input type="text" :disabled="guestTicket.guestType !== 2" class="invalid" placeholder="Surname"           v-model="guestTicket.accompName" maxlength="20">
+                    <input type="text" :disabled="guestTicket.guestType !== 2" class="invalid" placeholder="Membership Number" v-model="guestTicket.accompNum" maxlength="10">
                 </div>
-                <input type="text" placeholder="Full Address" name="address" required>
+            </div>
 
-                <h3>Please select an appropriate category below</h3>
+            <div class="errorNotice" v-show="showError"> {{errorText}} </div>
 
-                <div class="guestCategory" :class="{ 'active': (guestType === 1) }" @click="guestType = 1">
-                    <div class="checkbox" :class="{ 'active': (guestType === 1) }"></div>
-                    <h4>Temporary Member</h4>
-                    <p>I declare that i reside outside a 5km radius of this club.</p>
-                </div>
-                <div class="guestCategory" :class="{ 'active': (guestType === 2) }" @click="guestType = 2">
-                    <div class="checkbox" :class="{ 'active': (guestType === 2) }"></div>
-                    <h4>Guest of a Member</h4>
-                    <p>I declare that i will remain in the reasonable company of the member at all times and will not remain on club premises longer than that of the member.</p>
-                
-                    <h5>Accompanying Member Details</h5>
+            <div id="guestRules">
+                <p>All visitors must adhere to the directions of the management of the club.</p>
+                <p>All visitors must be suitably attired.</p>
+                <p>This ticket must be carried whilst on club premises</p>
+                <p>This card is valid on the day of issue only</p>
+            </div>
 
-                    <div class="inputContain">
-                        <input type="text" placeholder="Surname" name="accompName" maxlength="20">
-                        <input type="text" placeholder="Membership Number" name="accompNum" maxlength="10">
-                    </div>
-                </div>
-
-                <div id="guestRules">
-                    <p>All visitors must adhere to the directions of the management of the club.</p>
-                    <p>All visitors must be suitably attired.</p>
-                    <p>This ticket must be carried whilst on club premises</p>
-                    <p>This card is valid on the day of issue only</p>
-                </div>
-
-                <button type="submit">SUBMIT</button>
-            </form>
+            <button @click="submitTicket">SUBMIT</button>
         </section>
 
-        <success-ticket :ticketID="ticketNumber" v-else />
+        <success-ticket v-else :ticketID="ticketNumber" />
     </div>
 </template>
 
@@ -64,27 +64,63 @@
         components: { SuccessTicket },
         data() {
             return {
-                guestType: 1,
+                guestTicket: {
+                    guestType:  1,
+                    fname:      '',
+                    sname:      '',
+                    address:    '',
+                    accompName: '',
+                    accompNum:  '',
+                },
+
                 checkInConfirmed: false,
-                ticketNumber: '000000',
+                ticketNumber: null,
+
+                showError: false,
+                errorText: null,
             }
         },
-        methods: {
-            async sendForm() {
-                let fd = new FormData(document.getElementById('guestRegisterForm'));
-            
-                fd.append('guestType', this.guestType)
+        computed: {
+            isValidForm() {
+                if((this.guestTicket.fname && this.guestTicket.sname && this.guestTicket.address) &&
+                    this.guestTicket.guestType === 1 || 
+                   (this.guestTicket.guestType === 2 && (this.guestTicket.accompName && this.guestTicket.accompNum))) {
+                    
+                    this.showError = false;
+                    return true
+                }   
+           
+                this.showError = true;
+                this.errorText = 'Form contains missing or invalid data. Please confirm and try again.';
 
-                await axios.post('/upload-form', fd)
-                    .then((response) => {
+                return false;
+            }
+        },  
+        methods: {
+            submitTicket() {
+                if(this.isValidForm) {
+                    axios.post('/api/upload-form', this.guestTicket)
+                     .then((response) => {
                         if(response.status === 200) {
                             this.checkInConfirmed = true;
                             this.ticketNumber = response.data;
                         }
-                    })
-                    .catch((error) => alert("upload error: " + error));
+                     })
+                     .catch((error) => {
+                        this.showError = true;
+                        this.errorText = 'Server Error';
+                     });
+                }
             }
         },
+        watch: {
+            'guestTicket.guestType': function(val) {
+                if(val !== 2) {
+                    this.guestTicket.accompName = '';
+                    this.guestTicket.accompNum  = '';
+                }
+            }
+        }
     }
 </script>
 
@@ -107,7 +143,7 @@
         margin: 5px 0;
         padding: .8rem 1rem;
     }
-    button[type=submit] {
+    button {
         width: 100%;
         margin-top: .5rem;
         padding: 1rem;

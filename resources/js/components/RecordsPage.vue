@@ -3,6 +3,9 @@
         <div id="modalInner">
             <button @click="hideModal">&#10006;</button>
             <h2>Manually Add Record</h2>
+
+            <div v-if="isActiveErrorMsg" id="newRecordError">Record contains invalid or empty data. Please fix and resubmit.</div>
+
             <div style="display: flex; flex-direction: column; gap: 5px">
                 <div style="display: flex; gap: 5px;">
                     <input v-model="newRecord.fname" type="text" :class="{ 'invalid': isActiveErrorMsg }" placeholder="First Name" required>
@@ -28,16 +31,13 @@
                 </div>
             </div>
 
-            <div v-if="isActiveErrorMsg" id="newRecordError">
-                Record contains invalid or empty data. Please fix and resubmit.
-            </div>
-
             <button @click="addRecord()">Create Record</button>
         </div>
     </div>
 
     <div id="queryContain">
-        <button @click="logout()">logout</button>
+        <div id="mainLogo" @click="logout()"></div>
+
         <div :class="{ 'active': searchByParams.Surname }" @click="changeSearchParam('Surname')">Surname</div>
         <div :class="{ 'active': searchByParams.Date }"    @click="changeSearchParam('Date')">Date</div>
         <div :class="{ 'active': searchByParams.ID }"      @click="changeSearchParam('ID')">Ticket ID</div>
@@ -45,7 +45,7 @@
 
     <div id="searchContain">
         <input type="text" :placeholder="placeholderText" v-model="inputText">
-        <button id="addRecordBtn" @click="showModal()">+</button>
+        <button id="addRecordBtn" @click="showModal()"></button>
         <button id="exportBtn" @click="exportData()"></button>
     </div>
 
@@ -55,14 +55,14 @@
 
     <table>
         <tr>
-            <th>First Name</th>
-            <th>Surname</th>
-            <th>Address</th>
-            <th>Guest Type</th>       
-            <th>Member Name</th>
-            <th>Member Number</th>
-            <th>Check In Time</th>
-            <th>Ticket Number</th>
+            <th :class="{ active: (sortCol === 1) }" @click="setSortCol(1)">First Name    <span v-if="sortCol === 1" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 2) }" @click="setSortCol(2)">Surname       <span v-if="sortCol === 2" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 3) }" @click="setSortCol(3)">Address       <span v-if="sortCol === 3" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 4) }" @click="setSortCol(4)">Guest Type    <span v-if="sortCol === 4" v-html="arrow"></span></th>       
+            <th :class="{ active: (sortCol === 5) }" @click="setSortCol(5)">Member Name   <span v-if="sortCol === 5" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 6) }" @click="setSortCol(6)">Member Number <span v-if="sortCol === 6" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 7) }" @click="setSortCol(7)">Check In Time <span v-if="sortCol === 7" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 8) }" @click="setSortCol(8)">Ticket Number <span v-if="sortCol === 8" v-html="arrow"></span></th>
         </tr>
 
         <template v-if="records.length > 0">
@@ -114,6 +114,9 @@
                 placeholderText: 'Filter by Surname',
                 inputText: '',
 
+                sortAsc: true,
+                sortCol: 1,
+
                 records: [],
                 links:   [],
             }
@@ -143,6 +146,9 @@
                 else if(this.searchByParams.ID)
                     return 'id';
             },
+            arrow() {
+                return (this.sortAsc) ? '&#xFFEA' : '&#xFFEC';
+            }
         },
         methods: {
             showModal() { this.isActiveModal = true },
@@ -207,9 +213,9 @@
                 this.isActiveErrorMsg = false;
             },
             logout() {
-                axios.post('/api/logout').then((reponse) => {
-                    this.$router.push('/admin');
-                })   
+                if(confirm('Are you sure you wish to logout?')) {
+                    axios.post('/api/logout').then(() => { this.$router.push('/admin') })   
+                }
             },
             exportData() {
                 axios.post('/api/export-records', { queryString: this.inputText, category: this.searchCategory }, { responseType: 'blob' })
@@ -224,7 +230,13 @@
                         link.click();
                         document.body.removeChild(link);
                      })
-                    //  .catch((error) => alert("export error: " + error));
+                     .catch((error) => alert("export error: " + error));
+            },
+            setSortCol(index) {
+                if(this.sortCol === index)
+                    this.sortAsc = !this.sortAsc;
+
+                this.sortCol = index;
             }
         },
         watch: {
@@ -249,6 +261,15 @@
             th {   
                 font-size: .7rem;
                 padding: .5rem 0;
+                user-select: none;
+                font-weight: normal;
+                color: #ccc;
+                cursor: pointer;
+
+                &.active { 
+                    font-weight: bold;
+                    color: #fff;
+                }
             }
 
             &:not(:first-child):hover { background: #ebf0fa }
@@ -294,11 +315,6 @@
             height: 2.5rem;
             padding: 0 1rem;
             font-size: .9rem;
-
-            &.invalid {
-                background: #ffe6e6;
-                border: 1px solid red;
-            }
         }
         input[type=radio] {
             height: 1.5rem;
@@ -335,14 +351,21 @@
             cursor: pointer
         }
     }
+
+    #mainLogo {
+        background: red;
+        height: 100%;
+        width: 20rem;
+    }
+
     #queryContain {
         display: flex;
         justify-content: right;
         align-items: center;
         height: 5rem;
-        padding: 1rem 1rem 1rem 12rem;
+        padding: 1rem;
         border-bottom: 1px solid #ccc;    
-        background: #333 url('../../../public/assets/18-footers-logo-wide.png') no-repeat center left 1rem / auto 4rem;
+        background: #333;
     
         div {
             display: flex;
@@ -357,19 +380,26 @@
             user-select: none;
             cursor: pointer;
 
-            &:nth-of-type(1) { background: #d9d9d9 url('../../../public/assets/person-icon.svg') no-repeat top .5rem center / 2rem }
-            &:nth-of-type(2) { background: #d9d9d9 url('../../../public/assets/calendar.svg') no-repeat top .5rem center / 2rem  }
-            &:nth-of-type(3) { background: #d9d9d9 url('../../../public/assets/hash.svg') no-repeat top .8rem center / 1.5rem }
+            &:nth-of-type(1) {
+                width: 12rem;
+                margin-right: auto;
+                background: url('../../../public/assets/18-footers-logo-wide.png') no-repeat center left 1rem / auto 4rem;
+            }
+            &:nth-of-type(2) { background: #d9d9d9 url('../../../public/assets/person-icon.svg') no-repeat top .5rem center / 2rem }
+            &:nth-of-type(3) { background: #d9d9d9 url('../../../public/assets/calendar.svg') no-repeat top .5rem center / 2rem  }
+            &:nth-of-type(4) { background: #d9d9d9 url('../../../public/assets/hash.svg') no-repeat top .8rem center / 1.5rem }
             &.active { background-color: #fff }
         }
     }
     #addRecordBtn {
-        line-height: 2rem;
-        font-size: 2rem;
-        color: #333;
+        background: url('../../../public/assets/add-record.svg') no-repeat center / auto 1.5rem;
+        border: solid 1px #3366cc;
+        border-radius: 3px;
     }
     #exportBtn {
         background: url('../../../public/images/excel.svg') no-repeat center / auto 1.5rem;
+        border: solid 1px #207245;
+        border-radius: 3px;
     }
     #searchContain {
         display: flex;
@@ -386,11 +416,15 @@
             }
             button {
                 width: 3.5rem;
-                border: 1px solid #ccc;
                 background-color: #f2f2f2;
                 cursor: pointer;
             }
         
+    }
+    #newRecordError {
+        margin-bottom: 1rem;
+        text-align: left;
+        color: red;
     }
     #numRecordsContain {
         display: flex;
@@ -423,11 +457,5 @@
                 color: #333;
             }
         }
-    }
-    #newRecordError {
-        margin: 1rem 0;
-        font-size: .9rem;
-        text-align: left;
-        color: red;
     }
 </style>
