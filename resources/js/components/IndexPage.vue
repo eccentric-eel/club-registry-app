@@ -14,11 +14,11 @@
             <h1>Temporary member & guest member sign in</h1>
 
             <div class="inputContain">
-                <input type="text" placeholder="First Name" class="invalid" v-model="guestTicket.fname" maxlength="20">
-                <input type="text" placeholder="Surname"    class="invalid" v-model="guestTicket.sname" maxlength="20">
+                <input type="text" placeholder="First Name" :class="{ 'invalid': !isValidfname }" v-model="guestTicket.fname" maxlength="20">
+                <input type="text" placeholder="Surname"    :class="{ 'invalid': !isValidsname }" v-model="guestTicket.sname" maxlength="20">
             </div>
 
-            <input type="text" placeholder="Full Address" class="invalid" v-model="guestTicket.address">
+            <input type="text" placeholder="Full Address" :class="{ 'invalid': !isValidaddress }" v-model="guestTicket.address">
 
             <h3>Please select an appropriate category below</h3>
 
@@ -35,8 +35,8 @@
                 <h5>Accompanying Member Details</h5>
 
                 <div class="inputContain">
-                    <input type="text" :disabled="guestTicket.guestType !== 2" class="invalid" placeholder="Surname"           v-model="guestTicket.accompName" maxlength="20">
-                    <input type="text" :disabled="guestTicket.guestType !== 2" class="invalid" placeholder="Membership Number" v-model="guestTicket.accompNum" maxlength="10">
+                    <input type="text" :disabled="guestTicket.guestType !== 2" :class="{ 'invalid': !isValidaccompName }" placeholder="Surname"           v-model="guestTicket.accompName" maxlength="20">
+                    <input type="text" :disabled="guestTicket.guestType !== 2" :class="{ 'invalid': !isValidaccompNum  }" placeholder="Membership Number" v-model="guestTicket.accompNum"  maxlength="10">
                 </div>
             </div>
 
@@ -83,8 +83,8 @@
         computed: {
             isValidForm() {
                 if((this.guestTicket.fname && this.guestTicket.sname && this.guestTicket.address) &&
-                    this.guestTicket.guestType === 1 || 
-                   (this.guestTicket.guestType === 2 && (this.guestTicket.accompName && this.guestTicket.accompNum))) {
+                   (this.guestTicket.guestType === 1 || 
+                   (this.guestTicket.guestType === 2 && (this.guestTicket.accompName && this.guestTicket.accompNum)))) {
                     
                     this.showError = false;
                     return true
@@ -94,7 +94,13 @@
                 this.errorText = 'Form contains missing or invalid data. Please confirm and try again.';
 
                 return false;
-            }
+            },
+            isValidfname()      { return (this.showError && !this.guestTicket.fname)   ? false : true },
+            isValidsname()      { return (this.showError && !this.guestTicket.sname)   ? false : true },
+            isValidaddress()    { return (this.showError && !this.guestTicket.address) ? false : true },
+
+            isValidaccompName() { return (this.showError && this.guestTicket.guestType === 2 && !this.guestTicket.accompName) ? false : true },
+            isValidaccompNum()  { return (this.showError && this.guestTicket.guestType === 2 && !this.guestTicket.accompNum)  ? false : true },
         },  
         methods: {
             submitTicket() {

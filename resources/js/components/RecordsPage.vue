@@ -2,16 +2,17 @@
     <div id="modalContain" :class="{ 'active': isActiveModal }">
         <div id="modalInner">
             <button @click="hideModal">&#10006;</button>
-            <h2>Manually Add Record</h2>
+            <h2>Manual Record Entry</h2>
 
             <div v-if="isActiveErrorMsg" id="newRecordError">Record contains invalid or empty data. Please fix and resubmit.</div>
 
             <div style="display: flex; flex-direction: column; gap: 5px">
                 <div style="display: flex; gap: 5px;">
-                    <input v-model="newRecord.fname" type="text" :class="{ 'invalid': isActiveErrorMsg }" placeholder="First Name" required>
-                    <input v-model="newRecord.sname" type="text" :class="{ 'invalid': isActiveErrorMsg }" placeholder="Surname" required>
+
+                    <input v-model="newRecord.fname" type="text" :class="{ 'invalid': !isValidfname }" placeholder="First Name" required>
+                    <input v-model="newRecord.sname" type="text" :class="{ 'invalid': !isValidsname }" placeholder="Surname" required>
                 </div>
-                <input v-model="newRecord.address" type="text" :class="{ 'invalid': isActiveErrorMsg }" placeholder="Address" required>
+                <input v-model="newRecord.address" type="text" :class="{ 'invalid': !isValidaddress }" placeholder="Address" required>
 
                 <div style="display: flex; gap: 1.5rem; padding: 1rem 0;">
 
@@ -26,8 +27,8 @@
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <input v-model="newRecord.accompName" :class="{ 'invalid': (isActiveErrorMsg && (newRecord.guestType === 2)) }" type="text" :disabled="(newRecord.guestType !== 2)" placeholder="Accompanying Member Name" required>
-                    <input v-model="newRecord.accompNum" :class="{ 'invalid': (isActiveErrorMsg && (newRecord.guestType === 2)) }" type="text" :disabled="(newRecord.guestType !== 2)" placeholder="Accompanying Member Number" required>
+                    <input v-model="newRecord.accompName" :class="{ 'invalid': !isValidaccompName }" type="text" :disabled="(newRecord.guestType !== 2)" placeholder="Accompanying Member Name" required>
+                    <input v-model="newRecord.accompNum"  :class="{ 'invalid': !isValidaccompNum }"  type="text" :disabled="(newRecord.guestType !== 2)" placeholder="Accompanying Member Number" required>
                 </div>
             </div>
 
@@ -44,7 +45,11 @@
     </div>
 
     <div id="searchContain">
+        <!-- <datepicker v-if="searchByParams.Date" v-model="inputStartDate" placeholder="Start Date" />
+        <datepicker v-if="searchByParams.Date" v-model="inputEndDate"   placeholder="End Date" /> -->
+  
         <input type="text" :placeholder="placeholderText" v-model="inputText">
+
         <button id="addRecordBtn" @click="showModal()"></button>
         <button id="exportBtn" @click="exportData()"></button>
     </div>
@@ -100,19 +105,21 @@
                     ID:      false,
                 },
                 newRecord: {
-                    fname:      null,
-                    sname:      null,
-                    address:    null,
-                    accompName: null,
-                    accompNum:  null,
+                    fname:      '',
+                    sname:      '',
+                    address:    '',
+                    accompName: '',
+                    accompNum:  '',
                     guestType:  1,
                 },
 
-                isActiveModal: false,
+                isActiveModal:    false,
                 isActiveErrorMsg: false,
             
                 placeholderText: 'Filter by Surname',
-                inputText: '',
+                inputText:      '',
+                inputStartDate: '',
+                inputEndDate:   '',
 
                 sortAsc: true,
                 sortCol: 1,
@@ -146,9 +153,28 @@
                 else if(this.searchByParams.ID)
                     return 'id';
             },
-            arrow() {
-                return (this.sortAsc) ? '&#xFFEA' : '&#xFFEC';
-            }
+            arrow() { return (this.sortAsc) ? '&#xFFEA' : '&#xFFEC' },
+
+            isValidForm() {
+                if((this.newRecord.fname && this.newRecord.sname && this.newRecord.address) &&
+                   (this.newRecord.guestType === 1 || 
+                   (this.newRecord.guestType === 2 && (this.newRecord.accompName && this.newRecord.accompNum)))) {
+
+                    this.isActiveErrorMsg = false;
+                    return true
+                }   
+           
+                this.isActiveErrorMsg = true;
+                return false;
+            },
+
+            isValidfname()      { return (this.isActiveErrorMsg && !this.newRecord.fname)   ? false : true },
+            isValidsname()      { return (this.isActiveErrorMsg && !this.newRecord.sname)   ? false : true },
+            isValidaddress()    { return (this.isActiveErrorMsg && !this.newRecord.address) ? false : true },
+
+            isValidaccompName() { return (this.isActiveErrorMsg && this.newRecord.guestType === 2 && !this.newRecord.accompName) ? false : true },
+            isValidaccompNum()  { return (this.isActiveErrorMsg && this.newRecord.guestType === 2 && !this.newRecord.accompNum)  ? false : true },
+
         },
         methods: {
             showModal() { this.isActiveModal = true },
@@ -159,13 +185,19 @@
             addRecord() { 
                 this.isActiveErrorMsg = false;
 
-                if(this.validateRecord()) {
+                if(this.isValidForm) {
                     axios.post('/api/upload-form', this.newRecord)
                          .then((response) => {
                             this.updatePage('/api/query-records');
                             this.hideModal();
                          })
-                         .catch((error) => alert("upload error: " + error));
+                         .catch((error) => {
+                            this.isActiveErrorMsg = true;
+                            alert('error uploading')
+                         });
+                }
+                else {
+                    this.isActiveErrorMsg = true;
                 }
             },
             updatePage(url) {
@@ -191,20 +223,6 @@
                 this.searchByParams[param] = true;
                 this.placeholderText = `Filter by ${param}`;
                 this.inputText = '';
-            },
-            validateRecord() {
-                for(let prop in this.newRecord) {
-                    if((prop === 'accompName' || prop === 'accompNum') && this.newRecord['guestType'] === 1) {
-                        console.log('inside');
-                        continue;
-                    }
-
-                    if(this.newRecord[prop] === null) {
-                        this.isActiveErrorMsg = true;
-                        return false;
-                    }
-                }
-                return true;
             },
             resetRecord() {
                 for(let prop in this.newRecord) { this.newRecord[prop] = null }
@@ -240,12 +258,19 @@
             }
         },
         watch: {
-            inputText(val) { this.updatePage('/api/query-records') }
+            inputText(val) { this.updatePage('/api/query-records') },
+
+            'newRecord.guestType': function(val) {
+                if(val !== 2) {
+                    this.newRecord.accompName = '';
+                    this.newRecord.accompNum  = '';
+                }
+            }
         },
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     table {
         border-spacing: 0;
         width: calc(100% - 1rem);
@@ -353,7 +378,6 @@
     }
 
     #mainLogo {
-        background: red;
         height: 100%;
         width: 20rem;
     }
@@ -409,17 +433,16 @@
         height: 3.2rem;
         gap: 10px;
 
-            input { 
-                flex: 1;
-                height: 100%;
-                padding: 0 1rem;
-            }
-            button {
-                width: 3.5rem;
-                background-color: #f2f2f2;
-                cursor: pointer;
-            }
-        
+        input[type=text] { 
+            flex: 1;
+            height: 2.2rem;
+            padding: 0 1rem;
+        }
+        button {
+            width: 3.5rem;
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
     }
     #newRecordError {
         margin-bottom: 1rem;

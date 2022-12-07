@@ -24,7 +24,8 @@ class RecordsController extends Controller
         return response(null, 401);
     }
 
-    public function logout(Request $request) {
+    public function logout(Request $request)
+    {
         Auth::logout();
     }
 
@@ -75,10 +76,10 @@ class RecordsController extends Controller
         return $record->id;
     }
 
-    //delete particular record from DB
-    public function destroy($id)
+    
+    public function destroy($id) //delete record
     {
-        //
+
     }
 
     protected function getCategory($query)

@@ -2,7 +2,7 @@
     <div id="pageContainer">
         <div id="pageInner">
             <h3>Administrator Login</h3>
-            
+
             <div class="errorNotice" v-show="showError">{{errorText}}</div>
 
             <input type="text"     placeholder="username" v-model="username" />
@@ -75,7 +75,7 @@
         padding: 1rem 2rem 2rem 2rem;
         margin: .5rem;
         background: #fff;
-        border-radius: .7rem;
+ 
         border: 1px solid #999;
     }
 
