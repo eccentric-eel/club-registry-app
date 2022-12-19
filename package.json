@@ -11,6 +11,7 @@
     "bootstrap": "^5.2.1",
     "roboto-fontface": "*",
     "vue": "^3.2.29",
+    "vue-ctk-date-time-picker": "^3.0.0-alpha.0",
     "vue-router": "^4.0.12",
     "webfontloader": "^1.0.0"
   },

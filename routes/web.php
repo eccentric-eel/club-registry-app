@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/',              'App\Http\Controllers\RecordsController@index');
-Route::get('/admin',         'App\Http\Controllers\RecordsController@index');
-Route::get('/admin/records', 'App\Http\Controllers\RecordsController@records');
+Route::get('/',              'App\Http\Controllers\RecordController@index');
+Route::get('/admin',         'App\Http\Controllers\RecordController@index');
+Route::get('/admin/records', 'App\Http\Controllers\RecordController@records');
 
 Route::get('/{any}',       function() { return redirect('/'); });
 Route::get('/admin/{any}', function() { return redirect('/'); });

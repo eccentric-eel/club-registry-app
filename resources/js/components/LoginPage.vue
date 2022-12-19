@@ -89,8 +89,8 @@
     }
     input {
         width: 100%;
-        font-size: 1.2rem;
-        padding: .5rem 2rem;
+        font-size: 1rem;
+        padding: .7rem 2rem;
         margin: .3rem 0;
     }
     button {

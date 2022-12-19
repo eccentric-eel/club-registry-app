@@ -1,57 +1,42 @@
 <template>
-    <div id="modalContain" :class="{ 'active': isActiveModal }">
-        <div id="modalInner">
-            <button @click="hideModal">&#10006;</button>
-            <h2>Manual Record Entry</h2>
-
-            <div v-if="isActiveErrorMsg" id="newRecordError">Record contains invalid or empty data. Please fix and resubmit.</div>
-
-            <div style="display: flex; flex-direction: column; gap: 5px">
-                <div style="display: flex; gap: 5px;">
-
-                    <input v-model="newRecord.fname" type="text" :class="{ 'invalid': !isValidfname }" placeholder="First Name" required>
-                    <input v-model="newRecord.sname" type="text" :class="{ 'invalid': !isValidsname }" placeholder="Surname" required>
-                </div>
-                <input v-model="newRecord.address" type="text" :class="{ 'invalid': !isValidaddress }" placeholder="Address" required>
-
-                <div style="display: flex; gap: 1.5rem; padding: 1rem 0;">
-
-                    <div @click="newRecord.guestType = 1" style="display: flex; align-items: center;">
-                        <input type="radio" :checked="newRecord.guestType === 1" name="guestType" value="tempMember">
-                        <label style="margin-left: .5rem;" for="tempMember">Temporary Member</label>
-                    </div>
-                    <div @click="newRecord.guestType = 2" style="display: flex; align-items: center;">
-                        <input type="radio"  :checked="newRecord.guestType === 2" name="guestType" value="memberGuest">
-                        <label style="margin-left: .5rem;" for="memberGuest">Guest of a Member</label>
-                    </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <input v-model="newRecord.accompName" :class="{ 'invalid': !isValidaccompName }" type="text" :disabled="(newRecord.guestType !== 2)" placeholder="Accompanying Member Name" required>
-                    <input v-model="newRecord.accompNum"  :class="{ 'invalid': !isValidaccompNum }"  type="text" :disabled="(newRecord.guestType !== 2)" placeholder="Accompanying Member Number" required>
-                </div>
-            </div>
-
-            <button @click="addRecord()">Create Record</button>
-        </div>
-    </div>
+    <RecordModal v-if="isActiveModal"
+    :recordError="showRecordError"
+    @hideModal="hideModal"
+    @addRecord="addRecord" />
 
     <div id="queryContain">
         <div id="mainLogo" @click="logout()"></div>
-
-        <div :class="{ 'active': searchByParams.Surname }" @click="changeSearchParam('Surname')">Surname</div>
-        <div :class="{ 'active': searchByParams.Date }"    @click="changeSearchParam('Date')">Date</div>
-        <div :class="{ 'active': searchByParams.ID }"      @click="changeSearchParam('ID')">Ticket ID</div>
+        <div :class="{ 'active': searchMode === 1 }" @click="searchMode = 1">General</div>
+        <div :class="{ 'active': searchMode === 2 }" @click="searchMode = 2">Date</div>
     </div>
 
     <div id="searchContain">
-        <!-- <datepicker v-if="searchByParams.Date" v-model="inputStartDate" placeholder="Start Date" />
-        <datepicker v-if="searchByParams.Date" v-model="inputEndDate"   placeholder="End Date" /> -->
-  
-        <input type="text" :placeholder="placeholderText" v-model="inputText">
+        <input v-if="searchMode === 1" type="text" placeholder="Name / Address / Ticket No." v-model="inputText">
+
+        <VueCtkDateTimePicker v-if="searchMode === 2"
+        style="border: 1px solid #767676"
+        input-size="sm"
+        color="#ac3939"
+        label="Start Date (DD/MM/YYYY)"
+        format="DD-MM-YYYY"
+        only-date
+        no-label
+        no-button
+        v-model="inputStartDate" />
+
+        <VueCtkDateTimePicker v-if="searchMode === 2"
+        style="border: 1px solid #767676"
+        input-size="sm"
+        color="#ac3939"
+        label="End Date (DD/MM/YYYY)"
+        format="DD-MM-YYYY"
+        only-date
+        no-label
+        no-button
+        v-model="inputEndDate" />
 
         <button id="addRecordBtn" @click="showModal()"></button>
-        <button id="exportBtn" @click="exportData()"></button>
+        <button id="exportBtn"    @click="exportData()"></button>
     </div>
 
     <div id="numRecordsContain" :class="{ 'active': records.length }">
@@ -60,14 +45,14 @@
 
     <table>
         <tr>
-            <th :class="{ active: (sortCol === 1) }" @click="setSortCol(1)">First Name    <span v-if="sortCol === 1" v-html="arrow"></span></th>
-            <th :class="{ active: (sortCol === 2) }" @click="setSortCol(2)">Surname       <span v-if="sortCol === 2" v-html="arrow"></span></th>
-            <th :class="{ active: (sortCol === 3) }" @click="setSortCol(3)">Address       <span v-if="sortCol === 3" v-html="arrow"></span></th>
-            <th :class="{ active: (sortCol === 4) }" @click="setSortCol(4)">Guest Type    <span v-if="sortCol === 4" v-html="arrow"></span></th>       
-            <th :class="{ active: (sortCol === 5) }" @click="setSortCol(5)">Member Name   <span v-if="sortCol === 5" v-html="arrow"></span></th>
-            <th :class="{ active: (sortCol === 6) }" @click="setSortCol(6)">Member Number <span v-if="sortCol === 6" v-html="arrow"></span></th>
-            <th :class="{ active: (sortCol === 7) }" @click="setSortCol(7)">Check In Time <span v-if="sortCol === 7" v-html="arrow"></span></th>
-            <th :class="{ active: (sortCol === 8) }" @click="setSortCol(8)">Ticket Number <span v-if="sortCol === 8" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 0) }" @click="setSortCol(0)">First Name    <span v-if="sortCol === 0" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 1) }" @click="setSortCol(1)">Surname       <span v-if="sortCol === 1" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 2) }" @click="setSortCol(2)">Address       <span v-if="sortCol === 2" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 3) }" @click="setSortCol(3)">Guest Type    <span v-if="sortCol === 3" v-html="arrow"></span></th>       
+            <th :class="{ active: (sortCol === 4) }" @click="setSortCol(4)">Member Name   <span v-if="sortCol === 4" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 5) }" @click="setSortCol(5)">Member Number <span v-if="sortCol === 5" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 6) }" @click="setSortCol(6)">Check-In Time <span v-if="sortCol === 6" v-html="arrow"></span></th>
+            <th :class="{ active: (sortCol === 7) }" @click="setSortCol(7)">Ticket Number <span v-if="sortCol === 7" v-html="arrow"></span></th>
         </tr>
 
         <template v-if="records.length > 0">
@@ -99,11 +84,6 @@
     export default {
         data() {
             return {
-                searchByParams: {
-                    Surname: true,
-                    Date:    false,
-                    ID:      false,
-                },
                 newRecord: {
                     fname:      '',
                     sname:      '',
@@ -113,16 +93,17 @@
                     guestType:  1,
                 },
 
-                isActiveModal:    false,
-                isActiveErrorMsg: false,
+                isActiveModal:   false,
+                showRecordError: false,
             
-                placeholderText: 'Filter by Surname',
                 inputText:      '',
                 inputStartDate: '',
                 inputEndDate:   '',
 
+                searchMode: 1,
+
                 sortAsc: true,
-                sortCol: 1,
+                sortCol: 0,
 
                 records: [],
                 links:   [],
@@ -130,105 +111,58 @@
         },
         created() { this.updatePage('/api/query-records') },
         computed: {
+            payloadObj() {
+                return {
+                    queryString: this.inputText,
+                    startDate:   this.inputStartDate,
+                    endDate:     this.inputEndDate,
+                    sortCol:     this.sortCol,
+                    sortAsc:     this.sortAsc,
+                }
+            },
             processedLinks() {
                 let navLinks = [];
 
                 this.links.forEach((link, index) => {
-
-                    if(index === 0)
-                        link.label = '‹';
-                    if(index === (this.links.length - 1))
-                        link.label = '›';
+                    if(index === 0)                       { link.label = '‹' }
+                    if(index === (this.links.length - 1)) { link.label = '›' }
 
                     navLinks.push(link)
                 })
 
                 return navLinks;
             }, 
-            searchCategory() {
-                if(this.searchByParams.Surname)
-                    return 'surname';
-                else if(this.searchByParams.Date)
-                    return 'date';
-                else if(this.searchByParams.ID)
-                    return 'id';
-            },
             arrow() { return (this.sortAsc) ? '&#xFFEA' : '&#xFFEC' },
-
-            isValidForm() {
-                if((this.newRecord.fname && this.newRecord.sname && this.newRecord.address) &&
-                   (this.newRecord.guestType === 1 || 
-                   (this.newRecord.guestType === 2 && (this.newRecord.accompName && this.newRecord.accompNum)))) {
-
-                    this.isActiveErrorMsg = false;
-                    return true
-                }   
-           
-                this.isActiveErrorMsg = true;
-                return false;
-            },
-
-            isValidfname()      { return (this.isActiveErrorMsg && !this.newRecord.fname)   ? false : true },
-            isValidsname()      { return (this.isActiveErrorMsg && !this.newRecord.sname)   ? false : true },
-            isValidaddress()    { return (this.isActiveErrorMsg && !this.newRecord.address) ? false : true },
-
-            isValidaccompName() { return (this.isActiveErrorMsg && this.newRecord.guestType === 2 && !this.newRecord.accompName) ? false : true },
-            isValidaccompNum()  { return (this.isActiveErrorMsg && this.newRecord.guestType === 2 && !this.newRecord.accompNum)  ? false : true },
-
         },
         methods: {
             showModal() { this.isActiveModal = true },
-            hideModal() { 
-                this.isActiveModal = false;
-                this.resetRecord();
-            },
-            addRecord() { 
-                this.isActiveErrorMsg = false;
+            hideModal() { this.isActiveModal = false },
+            addRecord(record) { 
+                this.showRecordError = false;
 
-                if(this.isValidForm) {
-                    axios.post('/api/upload-form', this.newRecord)
-                         .then((response) => {
-                            this.updatePage('/api/query-records');
-                            this.hideModal();
-                         })
-                         .catch((error) => {
-                            this.isActiveErrorMsg = true;
-                            alert('error uploading')
-                         });
-                }
-                else {
-                    this.isActiveErrorMsg = true;
-                }
+                axios.post('/api/upload-form', record)
+                     .then((response) => {
+                        this.updatePage('/api/query-records');
+                        this.hideModal();
+                     })
+                     .catch((error) => { this.showRecordError = true });
             },
             updatePage(url) {
                 if(url) {
                     let tmpContext = this;
                     
-                    axios.post(url, { queryString: this.inputText, category: this.searchCategory })
+                    axios.post(url, this.payloadObj)
                          .then(function (response) {
                             if(response.status === 200) {
-                                tmpContext.records = response.data.data;
-                                tmpContext.links = response.data.links;
+                                tmpContext.records      = response.data.data;
+                                tmpContext.links        = response.data.links;
                                 tmpContext.totalRecords = response.data.total;
-                                tmpContext.fromRecords = response.data.from;
-                                tmpContext.toRecords = response.data.to;
+                                tmpContext.fromRecords  = response.data.from;
+                                tmpContext.toRecords    = response.data.to;
                             }
                          })
                          .catch(function (error) { console.log(error) });
                 }
-            },
-            changeSearchParam(param) {
-                for (const prop in this.searchByParams) { this.searchByParams[prop] = false }
-    
-                this.searchByParams[param] = true;
-                this.placeholderText = `Filter by ${param}`;
-                this.inputText = '';
-            },
-            resetRecord() {
-                for(let prop in this.newRecord) { this.newRecord[prop] = null }
-
-                this.newRecord.guestType = 1;
-                this.isActiveErrorMsg = false;
             },
             logout() {
                 if(confirm('Are you sure you wish to logout?')) {
@@ -236,7 +170,7 @@
                 }
             },
             exportData() {
-                axios.post('/api/export-records', { queryString: this.inputText, category: this.searchCategory }, { responseType: 'blob' })
+                axios.post('/api/export-records', { queryString: this.inputText }, { responseType: 'blob' })
                      .then((response) => {
                         let link = document.createElement('a');
                         
@@ -255,22 +189,18 @@
                     this.sortAsc = !this.sortAsc;
 
                 this.sortCol = index;
+                this.updatePage('/api/query-records');
             }
         },
         watch: {
-            inputText(val) { this.updatePage('/api/query-records') },
-
-            'newRecord.guestType': function(val) {
-                if(val !== 2) {
-                    this.newRecord.accompName = '';
-                    this.newRecord.accompNum  = '';
-                }
-            }
+            inputText()      { this.updatePage('/api/query-records') },
+            inputStartDate() { this.updatePage('/api/query-records') },
+            inputEndDate()   { this.updatePage('/api/query-records') },
         },
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     table {
         border-spacing: 0;
         width: calc(100% - 1rem);
@@ -313,69 +243,6 @@
         }
         .noBorder { border: none }
     }
-    #modalContain {
-        display: none;
-        position: fixed;
-        height: 100vh;
-        width: 100vw;
-        background: rgba(0, 0, 0, 0.6);
-
-        &.active { display: block }
-    }
-    #modalInner {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 30rem;
-        max-width: 90%;
-        padding: 2rem;
-        border: 1px solid #666;
-        background: #fff;
-        text-align: center;
-        transform: translate(-50%, -50%);
-
-        h2 { padding-bottom: 1rem }
-        input { 
-            width: 100%;
-            height: 2.5rem;
-            padding: 0 1rem;
-            font-size: .9rem;
-        }
-        input[type=radio] {
-            height: 1.5rem;
-            width: 1.5rem;
-            padding: 0;
-            cursor: pointer
-        }
-
-        button:first-of-type {
-            position: absolute;    
-            top: 0;
-            right: 0;
-            height: 2rem;
-            width: 2rem;
-            font-size: 1.2rem;
-            line-height: 1.8rem;
-            font-weight: bold;
-            text-align: center;
-            border: none;
-            background: transparent;
-            color: red;
-            cursor: pointer;
-        }
-        button:last-of-type {
-            float: right;
-            border: none;
-            border-radius: 2px;
-            background: #3366cc;
-            font-size: .9rem;
-            color: #fff;
-            height: 2.5rem;
-            padding: 0 1rem;
-            margin-top: 1rem;
-            cursor: pointer
-        }
-    }
 
     #mainLogo {
         height: 100%;
@@ -411,7 +278,6 @@
             }
             &:nth-of-type(2) { background: #d9d9d9 url('../../../public/assets/person-icon.svg') no-repeat top .5rem center / 2rem }
             &:nth-of-type(3) { background: #d9d9d9 url('../../../public/assets/calendar.svg') no-repeat top .5rem center / 2rem  }
-            &:nth-of-type(4) { background: #d9d9d9 url('../../../public/assets/hash.svg') no-repeat top .8rem center / 1.5rem }
             &.active { background-color: #fff }
         }
     }
@@ -437,17 +303,16 @@
             flex: 1;
             height: 2.2rem;
             padding: 0 1rem;
+            border-radius: 4px;
+            border: 1px solid #767676;
         }
         button {
+            min-width: 3.5rem;
             width: 3.5rem;
             background-color: #f2f2f2;
+            border-radius: 4px;
             cursor: pointer;
         }
-    }
-    #newRecordError {
-        margin-bottom: 1rem;
-        text-align: left;
-        color: red;
     }
     #numRecordsContain {
         display: flex;
@@ -468,14 +333,19 @@
 
         button {
             height: 30px;
-            width: 30px;
+            min-width: 30px;
             line-height: 20px;
             background: #333;
             color: #fff;
             border-radius: 5px;
+            border: solid 1px #767676;
             cursor: pointer;
 
             &.active {
+                background: #fff;
+                color: #333;
+            }
+            &:hover {
                 background: #fff;
                 color: #333;
             }

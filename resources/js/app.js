@@ -5,8 +5,10 @@ import App         from './app.vue';
 import IndexPage   from './components/IndexPage.vue';
 import LoginPage   from './components/LoginPage.vue';
 import RecordsPage from './components/RecordsPage.vue';
+import RecordModal from './components/RecordModal.vue';
 
-import Datepicker from 'vue3-datepicker'
+import VueCtkDateTimePicker from 'vue-ctk-date-time-picker';
+import 'vue-ctk-date-time-picker/dist/vue-ctk-date-time-picker.css';
 
 const routes = [ { path: '/',              component: IndexPage   },
                  { path: '/admin',         component: LoginPage   },
@@ -15,7 +17,8 @@ const routes = [ { path: '/',              component: IndexPage   },
 const app     = createApp(App);
 const router  = createRouter({ history: createWebHistory(), routes });
 
-app.component('Datepicker', Datepicker);
+app.component('VueCtkDateTimePicker', VueCtkDateTimePicker);
+app.component('RecordModal', RecordModal);
 
 app.use(router);
 app.mount('#app');

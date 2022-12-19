@@ -2,7 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RecordController;
 use App\Http\Controllers\ExportController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -15,9 +17,9 @@ use App\Http\Controllers\ExportController;
 |
 */
 
-Route::post('/login',       'App\Http\Controllers\RecordsController@authenticate');
-Route::post('/logout',      'App\Http\Controllers\RecordsController@logout');
-Route::post('/upload-form', 'App\Http\Controllers\RecordsController@store');
+Route::post('/login',       'App\Http\Controllers\RecordController@authenticate');
+Route::post('/logout',      'App\Http\Controllers\RecordController@logout');
+Route::post('/upload-form', 'App\Http\Controllers\RecordController@store');
 
-Route::middleware('auth:sanctum')->post('/query-records',  'App\Http\Controllers\RecordsController@queryRecords');
+Route::middleware('auth:sanctum')->post('/query-records',  'App\Http\Controllers\RecordController@queryRecords');
 Route::middleware('auth:sanctum')->post('/export-records', ExportController::class);
