@@ -18,7 +18,7 @@ const app     = createApp(App);
 const router  = createRouter({ history: createWebHistory(), routes });
 
 app.component('VueCtkDateTimePicker', VueCtkDateTimePicker);
-app.component('RecordModal', RecordModal);
+app.component('RecordModal',          RecordModal);
 
 app.use(router);
 app.mount('#app');

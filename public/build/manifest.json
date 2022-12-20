@@ -1,7 +1,7 @@
 {
-  "public/assets/person-icon.svg": {
-    "file": "assets/person-icon.2c8a8ed3.svg",
-    "src": "public/assets/person-icon.svg"
+  "public/assets/18-footers-logo.png": {
+    "file": "assets/18-footers-logo.403e3edd.png",
+    "src": "public/assets/18-footers-logo.png"
   },
   "public/assets/checkmark.svg": {
     "file": "assets/checkmark.bd7a0047.svg",
@@ -11,17 +11,13 @@
     "file": "assets/18-footers-logo-wide.e03bfe89.png",
     "src": "public/assets/18-footers-logo-wide.png"
   },
-  "public/assets/18-footers-logo.png": {
-    "file": "assets/18-footers-logo.403e3edd.png",
-    "src": "public/assets/18-footers-logo.png"
-  },
   "public/assets/calendar.svg": {
     "file": "assets/calendar.236ac5dd.svg",
     "src": "public/assets/calendar.svg"
   },
-  "public/assets/hash.svg": {
-    "file": "assets/hash.5a2c038c.svg",
-    "src": "public/assets/hash.svg"
+  "public/assets/person-icon.svg": {
+    "file": "assets/person-icon.2c8a8ed3.svg",
+    "src": "public/assets/person-icon.svg"
   },
   "public/assets/add-record.svg": {
     "file": "assets/add-record.56030810.svg",
@@ -40,11 +36,11 @@
     "src": "public/assets/18-footers-splash.jpg"
   },
   "resources/js/app.js": {
-    "file": "assets/app.69080b5f.js",
+    "file": "assets/app.25ff876b.js",
     "src": "resources/js/app.js",
     "isEntry": true,
     "css": [
-      "assets/app.3dcd42ca.css"
+      "assets/app.71b10e33.css"
     ],
     "assets": [
       "assets/checkmark-green.160352a9.svg",
@@ -54,13 +50,12 @@
       "assets/18-footers-logo-wide.e03bfe89.png",
       "assets/person-icon.2c8a8ed3.svg",
       "assets/calendar.236ac5dd.svg",
-      "assets/hash.5a2c038c.svg",
       "assets/add-record.56030810.svg",
       "assets/excel.1500ea9b.svg"
     ]
   },
   "resources/js/app.css": {
-    "file": "assets/app.3dcd42ca.css",
+    "file": "assets/app.71b10e33.css",
     "src": "resources/js/app.css"
   }
 }

@@ -68,7 +68,12 @@ class RecordController extends Controller
               ->orderBy($sortCol, $sortDirection)
               ->paginate(100);
     }
- 
+
+    public function singleRecord(Request $request) //return only specified record
+    {
+        return Record::find($request->recordID);
+    }
+
     public function store(Request $request) //store new record in DB. return uniquely generated ticket ID
     {
         $request->validate([
@@ -94,8 +99,8 @@ class RecordController extends Controller
         return $record->id;
     }
     
-    public function destroy($id) //delete record
+    public function deleteRecord(Request $reques) //soft delete specified record
     {
-
+        return 'delete record';
     }
 }

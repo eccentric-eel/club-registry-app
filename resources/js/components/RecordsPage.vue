@@ -1,8 +1,10 @@
 <template>
     <RecordModal v-if="isActiveModal"
     :recordError="showRecordError"
+    :recordID="selectedRecord"
     @hideModal="hideModal"
-    @addRecord="addRecord" />
+    @addRecord="addRecord"
+    @deleteRecord="deleteRecord" />
 
     <div id="queryContain">
         <div id="mainLogo" @click="logout()"></div>
@@ -53,6 +55,7 @@
             <th :class="{ active: (sortCol === 5) }" @click="setSortCol(5)">Member Number <span v-if="sortCol === 5" v-html="arrow"></span></th>
             <th :class="{ active: (sortCol === 6) }" @click="setSortCol(6)">Check-In Time <span v-if="sortCol === 6" v-html="arrow"></span></th>
             <th :class="{ active: (sortCol === 7) }" @click="setSortCol(7)">Ticket Number <span v-if="sortCol === 7" v-html="arrow"></span></th>
+            <th></th>
         </tr>
 
         <template v-if="records.length > 0">
@@ -65,6 +68,7 @@
                 <td>{{ record.accompanying_member_number }}</td>
                 <td>{{ record.created_at }}</td>
                 <td>{{ record.id }}</td>
+                <td @click="showModal(record.id)"> Expand </td>
             </tr>
         </template>
         
@@ -84,6 +88,8 @@
     export default {
         data() {
             return {
+                selectedRecord: null,
+
                 newRecord: {
                     fname:      '',
                     sname:      '',
@@ -135,7 +141,10 @@
             arrow() { return (this.sortAsc) ? '&#xFFEA' : '&#xFFEC' },
         },
         methods: {
-            showModal() { this.isActiveModal = true },
+            showModal(recordID) {
+                this.isActiveModal = true; 
+                this.selectedRecord = (recordID) ? recordID : null;
+            },
             hideModal() { this.isActiveModal = false },
             addRecord(record) { 
                 this.showRecordError = false;
@@ -146,6 +155,14 @@
                         this.hideModal();
                      })
                      .catch((error) => { this.showRecordError = true });
+            },
+            deleteRecord(recordID) {
+                axios.post('/api/delete-record', recordID)
+                    .then((response) => {
+                        this.updatePage('/api/query-records');
+                        this.hideModal();
+                    })
+                    .catch((error) => { this.showRecordError = true });
             },
             updatePage(url) {
                 if(url) {
@@ -212,6 +229,12 @@
                 border: 1px solid #ccc;
                 border-top: none;
                 padding-left: .5rem;
+
+                &:last-of-type { 
+                    cursor: pointer;
+                    color: #999;
+                    font-size: .7rem;
+                }
             }
             th {   
                 font-size: .7rem;
@@ -221,6 +244,7 @@
                 color: #ccc;
                 cursor: pointer;
 
+                &:last-of-type { cursor: default }
                 &.active { 
                     font-weight: bold;
                     color: #fff;

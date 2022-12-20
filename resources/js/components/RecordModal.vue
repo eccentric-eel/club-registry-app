@@ -2,46 +2,51 @@
     <div id="modalContain">
         <div id="modalInner">
             <button @click="$emit('hideModal')">&#10006;</button>
-            <h2>Manual Record Entry</h2>
+
+            <h2 v-if="recordID">Existing Record - #{{ recordID }}</h2>
+            <h2 v-else>Manual Record Entry</h2>
 
             <div v-if="isActiveErrorMsg" id="newRecordError">{{ errorText }}</div>
 
             <div id="recordForm">
                 <div id="checkInContain">
-                    <span>Check-in Time:</span> {{ currentTimestamp }}
+                    <span>Check-in Time:</span> {{ (recordID) ? record.timestamp : currentTimestamp }}
                 </div>
 
                 <div class="name">
-                    <input v-model="record.fname" type="text" :class="{ 'invalid': !isValidfname }" placeholder="First Name" required>
-                    <input v-model="record.sname" type="text" :class="{ 'invalid': !isValidsname }" placeholder="Surname" required>
+                    <input v-model="record.fname" type="text" :class="{ 'invalid': !isValidfname }" :disabled="recordID" placeholder="First Name" required>
+                    <input v-model="record.sname" type="text" :class="{ 'invalid': !isValidsname }" :disabled="recordID" placeholder="Surname"    required>
                 </div>
-                <input v-model="record.address" type="text" :class="{ 'invalid': !isValidaddress }" placeholder="Current Address" required>
+                <input v-model="record.address" type="text" :class="{ 'invalid': !isValidaddress }" :disabled="recordID" placeholder="Current Address" required>
 
                 <div class="guestType">
                     <div @click="updateGuestType(1)">
-                        <input type="radio" :checked="record.guestType === 1" name="guestType" value="tempMember">
+                        <input type="radio" :checked="record.guestType === 1" :disabled="recordID" name="guestType" value="tempMember">
                         <label for="tempMember">Temporary Member</label>
                     </div>
                     <div @click="updateGuestType(2)">
-                        <input type="radio" :checked="record.guestType === 2" name="guestType" value="memberGuest">
+                        <input type="radio" :checked="record.guestType === 2" :disabled="recordID" name="guestType" value="memberGuest">
                         <label for="memberGuest">Guest of a Member</label>
                     </div>
                 </div>
 
                 <div class="accompGuest">
-                    <input v-model="record.accompName" :class="{ 'invalid': !isValidaccompName }" type="text" :disabled="(record.guestType !== 2)" placeholder="Accompanying Member Name" required>
-                    <input v-model="record.accompNum"  :class="{ 'invalid': !isValidaccompNum }"  type="text" :disabled="(record.guestType !== 2)" placeholder="Accompanying Member Number" required>
+                    <input v-model="record.accompName" :class="{ 'invalid': !isValidaccompName }" type="text" :disabled="(record.guestType !== 2) || recordID" placeholder="Accompanying Member Name" required>
+                    <input v-model="record.accompNum"  :class="{ 'invalid': !isValidaccompNum }"  type="text" :disabled="(record.guestType !== 2) || recordID" placeholder="Accompanying Member Number" required>
                 </div>
             </div>
 
-            <button @click="validateRecord()">Create Record</button>
+            <button v-if="recordID" @click="$emit('deleteRecord', recordID)" class="delete">Delete Record</button> 
+            <button v-else @click="validateRecord()">Create Record</button>            
         </div>
     </div>
 </template>
 
 <script>
+    import axios from 'axios';
+
     export default {
-        props: ['recordError'],
+        props: ['recordError', 'recordID'],
         data() {
             return {
                 record: {
@@ -51,9 +56,15 @@
                     accompName: '',
                     accompNum:  '',
                     guestType:  1,
+                    timestamp:  null,
                 },
                 isActiveErrorMsg: false,
                 errorText: 'Record contains invalid or empty data. Please fix and resubmit.',
+            }
+        },
+        mounted() {
+            if(this.recordID) {
+                this.getSingleRecord();
             }
         },
         computed: {
@@ -74,24 +85,42 @@
                     minute:  "numeric",
                     second:  "numeric",
                 };
-
                 return timestamp.toLocaleString("en-AU", options);
             },
         },
         methods: {
             validateRecord() {
-                if((this.record.fname && this.record.sname && this.record.address) &&
-                   (this.record.guestType === 1 || (this.record.guestType === 2 && (this.record.accompName && this.record.accompNum)))) {
+                if(!this.recordID) {
+                    if((this.record.fname && this.record.sname && this.record.address) &&
+                    (this.record.guestType === 1 || (this.record.guestType === 2 && (this.record.accompName && this.record.accompNum)))) {
 
-                    this.isActiveErrorMsg = false;
-                    this.$emit('addRecord', this.record);
-                }   
-                else {
-                    this.errorText = 'Record contains invalid or empty data. Please fix and resubmit.'
-                    this.isActiveErrorMsg = true;
+                        this.isActiveErrorMsg = false;
+                        this.$emit('addRecord', this.record);
+                    }   
+                    else {
+                        this.errorText = 'Record contains invalid or empty data. Please fix and resubmit.'
+                        this.isActiveErrorMsg = true;
+                    }
                 }
             },
-            updateGuestType(typeID) { this.record.guestType = typeID },
+            getSingleRecord() {
+                let tmpContext = this;
+
+                axios.get(`/api/single-record/${this.recordID}`)
+                     .then(function (response) {
+                        if(response.status === 200) {
+                            tmpContext.record.fname      = response.data.firstname;
+                            tmpContext.record.sname      = response.data.surname;
+                            tmpContext.record.address    = response.data.address;
+                            tmpContext.record.guestType  = (response.data.guest_type === 'Temporary Member') ? 1 : 2;
+                            tmpContext.record.accompName = response.data.accompanying_member_name;
+                            tmpContext.record.accompNum  = response.data.accompanying_member_number;
+                            tmpContext.record.timestamp  = response.data.created_at;
+                        }
+                     })
+                     .catch(function (error) { console.log(error) });
+            },
+            updateGuestType(typeID) { this.record.guestType = (!recordID) ? typeID : this.record.guestType },
         },
         watch: {
             recordError(val) {
@@ -170,7 +199,9 @@
             height: 2.5rem;
             padding: 0 1rem;
             margin-top: 1rem;
-            cursor: pointer
+            cursor: pointer;
+
+            &.delete { background: #ff3333 }
         }
     }
     #recordForm {
