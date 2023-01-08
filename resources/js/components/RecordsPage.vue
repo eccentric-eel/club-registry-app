@@ -157,12 +157,12 @@
                      .catch((error) => { this.showRecordError = true });
             },
             deleteRecord(recordID) {
-                axios.post('/api/delete-record', recordID)
-                    .then((response) => {
+                axios.post('/api/delete-record', {'recordID': recordID})
+                     .then((response) => {
                         this.updatePage('/api/query-records');
                         this.hideModal();
-                    })
-                    .catch((error) => { this.showRecordError = true });
+                     })
+                     .catch((error) => { this.showRecordError = true });
             },
             updatePage(url) {
                 if(url) {

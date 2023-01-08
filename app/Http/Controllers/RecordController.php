@@ -99,8 +99,10 @@ class RecordController extends Controller
         return $record->id;
     }
     
-    public function deleteRecord(Request $reques) //soft delete specified record
+    public function deleteRecord(Request $request) //soft delete specified record
     {
-        return 'delete record';
+        Record::find($request->recordID)->delete();
+
+        return response('record deleted', 200);
     }
 }
