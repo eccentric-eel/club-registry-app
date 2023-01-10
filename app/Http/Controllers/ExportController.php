@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use App\Models\Record;
+use Carbon\Carbon;
 
 class ExportController extends Controller
 {
@@ -23,11 +24,21 @@ class ExportController extends Controller
             "Check In Time" => "created_at",
             "Ticket Number" => "id",
         );
+
+        $this->colMap = [
+            'firstname',
+            'surname',
+            'address', 
+            'guest_type',
+            'accompanying_member_name', 
+            'accompanying_member_number',
+            'created_at',
+            'id'
+        ];
     }
 
     public function __invoke(Request $request)
     {
-        $category = $this->getCategory($request->category);
         $headerKeys = array_keys($this->headersArray);
         $rowNumber = 1;
 
@@ -37,8 +48,24 @@ class ExportController extends Controller
 
         $rowNumber++;
 
-        $records = Record::where($category, 'LIKE', '%' . $request->queryString . '%')->get()->toArray();
+        $sortCol = $this->colMap[$request->sortCol];
+        $sortDirection = ($request->sortAsc) ? 'asc' : 'desc';
+
+        $startDate = ($request->startDate) ? Carbon::parse($request->startDate) : new Carbon('1970-01-01');
+        $endDate   = ($request->endDate)   ? Carbon::parse($request->endDate)   : new Carbon('2100-12-31');
         
+        $records = Record::where(function ($query) use ($request) {
+            $query->where('firstname', 'LIKE', '%' . $request->queryString . '%')
+                  ->orWhere('surname', 'LIKE', '%' . $request->queryString . '%')
+                  ->orWhere('address', 'LIKE', '%' . $request->queryString . '%')
+                  ->orWhere('accompanying_member_name',   'LIKE', '%' . $request->queryString . '%')
+                  ->orWhere('accompanying_member_number', 'LIKE', '%' . $request->queryString . '%')
+                  ->orWhere('id', 'LIKE', '%' . $request->queryString . '%');
+            })->whereDate('created_at', '>=', $startDate)
+              ->whereDate('created_at', '<=', $endDate) 
+              ->orderBy($sortCol, $sortDirection)
+              ->get();
+
         foreach($records as $record) {
             $dataRow = [];
 
@@ -78,14 +105,5 @@ class ExportController extends Controller
             $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
             $writer->save('php://output');
         }, 'export.xlsx');
-    }
-
-    protected function getCategory($query)
-    {
-        switch ($query) {
-            case 'id'     : return 'id';
-            case 'surname': return 'surname';
-            case 'date'   : return 'created_at';
-        }
     }
 }

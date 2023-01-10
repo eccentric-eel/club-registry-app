@@ -6,6 +6,8 @@
     @addRecord="addRecord"
     @deleteRecord="deleteRecord" />
 
+    <LoadingModal v-if="isActiveLoadingModal" />
+
     <div id="queryContain">
         <div id="mainLogo" @click="logout()"></div>
         <div :class="{ 'active': searchMode === 1 }" @click="searchMode = 1">General</div>
@@ -99,8 +101,9 @@
                     guestType:  1,
                 },
 
-                isActiveModal:   false,
-                showRecordError: false,
+                isActiveModal:        false,
+                isActiveLoadingModal: false,
+                showRecordError:      false,
             
                 inputText:      '',
                 inputStartDate: '',
@@ -187,7 +190,9 @@
                 }
             },
             exportData() {
-                axios.post('/api/export-records', { queryString: this.inputText }, { responseType: 'blob' })
+                this.isActiveLoadingModal = true;
+
+                axios.post('/api/export-records', this.payloadObj, { responseType: 'blob' })
                      .then((response) => {
                         let link = document.createElement('a');
                         
@@ -198,8 +203,14 @@
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
+
+                        this.isActiveLoadingModal = false;
                      })
-                     .catch((error) => alert("export error: " + error));
+                     .catch((error) => {
+                        alert("export error: " + error);
+
+                        this.isActiveLoadingModal = false;
+                     });
             },
             setSortCol(index) {
                 if(this.sortCol === index)
