@@ -9,15 +9,6 @@ use Carbon\Carbon;
 
 class RecordController extends Controller
 {
-    protected $colMap = [ 'firstname',
-                          'surname',
-                          'address', 
-                          'guest_type',
-                          'accompanying_member_name', 
-                          'accompanying_member_number',
-                          'created_at',
-                          'id' ];
-
     public function authenticate(Request $request)
     {
         $credentials = $request->validate([
@@ -43,14 +34,20 @@ class RecordController extends Controller
     {      
         return view('index');
     }
+    
     public function records()
     {
         return (Auth::check()) ? view('index') : redirect('/admin');
     }
 
+    public function singleRecord(Request $request) //return only specified record
+    {
+        return Record::find($request->recordID);
+    }
+
     public function queryRecords(Request $request) //return all records from DB
     {
-        $sortCol = $this->colMap[$request->sortCol];
+        $sortCol = array_values(config('global.tableHeaders'))[$request->sortCol];
         $sortDirection = ($request->sortAsc) ? 'asc' : 'desc';
 
         $startDate = ($request->startDate) ? Carbon::parse($request->startDate) : new Carbon('1970-01-01');
@@ -67,11 +64,6 @@ class RecordController extends Controller
               ->whereDate('created_at', '<=', $endDate) 
               ->orderBy($sortCol, $sortDirection)
               ->paginate(100);
-    }
-
-    public function singleRecord(Request $request) //return only specified record
-    {
-        return Record::find($request->recordID);
     }
 
     public function store(Request $request) //store new record in DB. return uniquely generated ticket ID

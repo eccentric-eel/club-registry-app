@@ -10,36 +10,9 @@ use Carbon\Carbon;
 
 class ExportController extends Controller
 {
-    private $headersArray;
-
-    public function __construct()
-    {
-        $this->headersArray = array(
-            "First Name"    => "firstname",
-            "Surname"       => "surname",
-            "Address"       => "address",
-            "Guest Type"    => "guest_type",
-            "Member Name"   => "accompanying_member_name",
-            "Member Number" => "accompanying_member_number",
-            "Check In Time" => "created_at",
-            "Ticket Number" => "id",
-        );
-
-        $this->colMap = [
-            'firstname',
-            'surname',
-            'address', 
-            'guest_type',
-            'accompanying_member_name', 
-            'accompanying_member_number',
-            'created_at',
-            'id'
-        ];
-    }
-
     public function __invoke(Request $request)
     {
-        $headerKeys = array_keys($this->headersArray);
+        $headerKeys = array_keys(config('global.tableHeaders'));
         $rowNumber = 1;
 
         $spreadsheet = new Spreadsheet;
@@ -48,7 +21,7 @@ class ExportController extends Controller
 
         $rowNumber++;
 
-        $sortCol = $this->colMap[$request->sortCol];
+        $sortCol = array_values(config('global.tableHeaders'))[$request->sortCol];
         $sortDirection = ($request->sortAsc) ? 'asc' : 'desc';
 
         $startDate = ($request->startDate) ? Carbon::parse($request->startDate) : new Carbon('1970-01-01');
@@ -69,7 +42,7 @@ class ExportController extends Controller
         foreach($records as $record) {
             $dataRow = [];
 
-            foreach ($this->headersArray as $column) {
+            foreach (config('global.tableHeaders') as $column) {
                 $tmpValue = isset($record[$column]) ? $record[$column] : ' '; //if an attribute doesn't exist, use empty space ' '
                 $dataRow += [$column => $tmpValue];
             }
@@ -91,7 +64,7 @@ class ExportController extends Controller
             if (($rowNumber % 2 != 0) && ($rowNumber != 1)) {
                 $sheet->getStyle("A{$rowNumber}:{$highestColumn}{$rowNumber}")->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('efefef');
             }
-
+            
             $rowNumber++;
         }
 
