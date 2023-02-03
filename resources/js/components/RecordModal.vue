@@ -120,7 +120,7 @@
                      })
                      .catch(function (error) { console.log(error) });
             },
-            updateGuestType(typeID) { this.record.guestType = (!recordID) ? typeID : this.record.guestType },
+            updateGuestType(typeID) { this.record.guestType = (!this.recordID) ? typeID : this.record.guestType },
         },
         watch: {
             recordError(val) {

@@ -5,8 +5,8 @@
 
             <div class="errorNotice" v-show="showError">{{errorText}}</div>
 
-            <input type="text"     placeholder="username" v-model="username" />
-            <input type="password" placeholder="password" v-model="password" />
+            <input  @keydown.enter.prevent="submitLogin()" type="text"     placeholder="username" v-model="username" />
+            <input  @keydown.enter.prevent="submitLogin()" type="password" placeholder="password" v-model="password" />
             <button @click="submitLogin()">Login</button>
         </div>
     </div>
@@ -18,11 +18,10 @@
     export default {
         data() {
             return {
-                username: '',
-                password: '',
-
-                showError: false,
+                username:  '',
+                password:  '',
                 errorText: '',
+                showError: false,
             }
         },
         methods: { 
