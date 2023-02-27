@@ -15,7 +15,8 @@ Records can also be manually created or deleted from the admin UI. To ensure dat
 
 Exporting record data is possible through the green button at the top right of the interface. When exporting, all the current parameters that make up the data table's current 'state' will be applied and only those records that pass the filtering process will be exported. For example, if the system contains 10,000 total records but a substring filter is applied that only returns 100 records, only those 100 records will be added to the export file (and in the sort order displayed on the screen). 
 
-## Installation 
+## Setup
+After cloning the repo and setting up the .env file for your system, run *composer install* and *npm install* to import the required packages. From there you can run *php artisan db:seed* to seed the database with a temporary admin account (usename: admin, password: admin) as well as 10,000 randomly generated records from the included record factory.
 
 ## License
 You are free to use this project for personal use, however you may not redistribute it or use it for commercial purposes without permission. All artwork, logos and trademarks are copyrights of their respective owners. © Brandon Sterling 2023
